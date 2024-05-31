@@ -1,10 +1,10 @@
 module Main exposing (..)
 
-import Array exposing (get)
 import Browser
 import Element
 import Element.Background
 import Element.Border
+import Element.Events
 
 
 type Color
@@ -48,6 +48,10 @@ type alias Model =
     }
 
 
+type Msg
+    = ClickedBubble Int Int
+
+
 main =
     Browser.sandbox
         { init = initModel
@@ -61,44 +65,94 @@ view model =
 
 
 bubbleGrid matrix =
-    Element.column [ Element.spacing 3 ] (List.map bubbleGridRow matrix)
+    Element.column [ Element.spacing 3 ] (List.indexedMap bubbleGridRow matrix)
 
 
-bubbleGridRow row =
-    Element.row [ Element.spacing 3 ] (List.map bubble row)
+bubbleGridRow x row =
+    Element.row [ Element.spacing 3 ] (List.indexedMap (\ind bub -> bubble bub x ind) row)
 
 
-bubble bub =
+bubble bub x y =
     Element.el
-        [ Element.Background.color (getRGB bub.color |> (\( r, g, b ) -> Element.rgb255 r g b))
-        , Element.width (Element.px 20)
-        , Element.height (Element.px 20)
+        [ Element.Background.color (getRgbColor bub |> (\( r, g, b ) -> Element.rgb255 r g b))
+        , Element.width (Element.px bubbleDiameter)
+        , Element.height (Element.px bubbleDiameter)
         , Element.Border.rounded 10
+        , Element.Events.onClick (ClickedBubble x y)
         ]
         Element.none
 
 
-getRGB : Color -> ( Int, Int, Int )
-getRGB color =
-    case color of
-        Red ->
-            ( 255, 0, 0 )
-
-        Blue ->
-            ( 0, 0, 255 )
-
-        Green ->
-            ( 0, 255, 0 )
-
-        Yellow ->
-            ( 0, 125, 125 )
-
-        Brown ->
-            ( 0, 0, 0 )
+bubbleDiameter : Int
+bubbleDiameter =
+    30
 
 
+getRgbColor : Bubble -> ( Int, Int, Int )
+getRgbColor bub =
+    case bub.state of
+        Popped ->
+            ( 255, 255, 255 )
+
+        Unpopped ->
+            case bub.color of
+                Red ->
+                    ( 255, 0, 0 )
+
+                Blue ->
+                    ( 0, 0, 255 )
+
+                Green ->
+                    ( 0, 255, 0 )
+
+                Yellow ->
+                    ( 0, 125, 125 )
+
+                Brown ->
+                    ( 0, 0, 0 )
+
+
+update : Msg -> Model -> Model
 update msg model =
-    model
+    case msg of
+        ClickedBubble x y ->
+            let
+                newMatrix : Matrix Bubble
+                newMatrix =
+                    List.indexedMap
+                        (\indexRow row ->
+                            if indexRow == x then
+                                List.indexedMap
+                                    (\indexCol bub ->
+                                        if indexCol == y then
+                                            { bub | state = Popped }
+
+                                        else
+                                            bub
+                                    )
+                                    row
+
+                            else
+                                row
+                        )
+                        model.matrix
+            in
+            { model | matrix = newMatrix }
+
+
+
+-- case msg of
+--     ClickedBubble x y ->
+--         List.indexedMap
+--         (\indexRow row ->
+--             if indexRow == x then
+--                 (\indexCol bubble ->
+--                     if indexCol == y then
+--                         {model | matrix = popBubble bubble
+--                 )
+--                 row
+--         )
+--         model.matrix
 
 
 initialMatrix : Matrix Bubble
