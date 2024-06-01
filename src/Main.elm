@@ -5,7 +5,7 @@ import Element
 import Element.Background
 import Element.Border
 import Element.Events
-import Html exposing (b)
+import Html
 import Random
 import Set
 
@@ -69,22 +69,27 @@ main =
         }
 
 
+randomMatrix : Int -> Int -> Random.Generator (Matrix Bubble)
 randomMatrix r c =
     Random.map (\color -> { state = Unpopped, color = color }) randomColor
         |> Random.list c
         |> Random.list r
 
 
+randomColor : Random.Generator Color
 randomColor =
     Random.uniform Red [ Green, Blue, Yellow, Black ]
 
 
+view : Model -> Html.Html Msg
 view model =
     Element.layout [] (bubbleGrid model.matrix)
 
 
+bubbleGrid : Matrix Bubble -> Element.Element Msg
 bubbleGrid matrix =
     let
+        viewBubble : Int -> Int -> Bubble -> Element.Element Msg
         viewBubble x y bubble =
             Element.el
                 [ Element.Background.color (getRgbColor bubble |> (\( r, g, b ) -> Element.rgb255 r g b))
@@ -95,6 +100,7 @@ bubbleGrid matrix =
                 ]
                 Element.none
 
+        bubbleGridRow : Int -> List Bubble -> Element.Element Msg
         bubbleGridRow x row =
             Element.row [ Element.spacing 3 ] (List.indexedMap (viewBubble x) row)
     in
@@ -142,6 +148,7 @@ update msg model =
                 targetBubble =
                     getBubble x y model.matrix
 
+                newMatrix : Matrix Bubble
                 newMatrix =
                     case targetBubble of
                         Just bubble ->
@@ -163,17 +170,21 @@ getBubble x y matrix =
         |> Maybe.andThen (List.drop y >> List.head)
 
 
+bfsBubble : Int -> Int -> Matrix Bubble -> Color -> Matrix Bubble
 bfsBubble x y matrix color =
     let
+        queue : List ( Int, Int )
         queue =
             [ ( x, y ) ]
 
+        visited : Set.Set ( Int, Int )
         visited =
             Set.empty
     in
     bfsHelper queue visited matrix color
 
 
+bfsHelper : List ( Int, Int ) -> Set.Set ( Int, Int ) -> Matrix Bubble -> Color -> Matrix Bubble
 bfsHelper queue visited matrix color =
     case queue of
         [] ->
@@ -185,15 +196,19 @@ bfsHelper queue visited matrix color =
 
             else
                 let
+                    bubble : Maybe Bubble
                     bubble =
                         getBubble row col matrix
 
+                    updatedVisited : Set.Set ( Int, Int )
                     updatedVisited =
                         Set.insert ( row, col ) visited
 
+                    newQueue : List ( Int, Int )
                     newQueue =
                         rest ++ List.filter (\( r, c ) -> isValidBubble r c matrix && isSameColor r c matrix color) (neighbors row col)
 
+                    newMatrix : Matrix Bubble
                     newMatrix =
                         case bubble of
                             Just _ ->
@@ -257,6 +272,7 @@ changeBubbleState r c matrix =
         matrix
 
 
+movePoppedBubblesUpwards : List Bubble -> List Bubble
 movePoppedBubblesUpwards column =
     let
         ( popped, unpopped ) =
@@ -268,9 +284,11 @@ movePoppedBubblesUpwards column =
 updateBubbles : Matrix Bubble -> Matrix Bubble
 updateBubbles matrix =
     let
+        columns : Matrix Bubble
         columns =
             transpose matrix
 
+        newColumns : Matrix Bubble
         newColumns =
             List.map movePoppedBubblesUpwards columns
     in
