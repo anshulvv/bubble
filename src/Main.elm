@@ -185,19 +185,21 @@ bfsHelper queue visited matrix color =
 
 isValidBubble : Int -> Int -> Matrix Bubble -> Bool
 isValidBubble r c matrix =
-    r < List.length matrix && c < (List.length <| Maybe.withDefault [] (List.head matrix))
+    r
+        >= 0
+        && r
+        < List.length matrix
+        && c
+        >= 0
+        && c
+        < (List.length <| Maybe.withDefault [] <| List.head matrix)
 
 
 isSameColor : Int -> Int -> Matrix Bubble -> Color -> Bool
 isSameColor r c matrix color =
-    let
-        bubble : Maybe Bubble
-        bubble =
-            matrix |> List.drop r |> List.head |> Maybe.andThen (List.drop c >> List.head)
-    in
-    case bubble of
+    case getBubble r c matrix of
         Just bub ->
-            bub.color == color
+            bub.color == color && bub.state == Unpopped
 
         Nothing ->
             False
