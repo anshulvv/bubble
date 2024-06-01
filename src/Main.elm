@@ -5,6 +5,7 @@ import Element
 import Element.Background
 import Element.Border
 import Element.Events
+import Html exposing (b)
 import Set
 
 
@@ -70,10 +71,10 @@ bubbleGrid matrix =
 
 
 bubbleGridRow x row =
-    Element.row [ Element.spacing 3 ] (List.indexedMap (\ind bubble -> viewBubble bubble x ind) row)
+    Element.row [ Element.spacing 3 ] (List.indexedMap (viewBubble x) row)
 
 
-viewBubble bubble x y =
+viewBubble x y bubble =
     Element.el
         [ Element.Background.color (getRgbColor bubble |> (\( r, g, b ) -> Element.rgb255 r g b))
         , Element.width (Element.px bubbleDiameter)
@@ -125,7 +126,7 @@ update msg model =
                 newMatrix =
                     case targetBubble of
                         Just bubble ->
-                            bfsBubble x y model.matrix bubble.color
+                            bfsBubble x y model.matrix bubble.color |> updateBubbles
 
                         Nothing ->
                             model.matrix
@@ -232,19 +233,24 @@ changeBubbleState r c matrix =
         matrix
 
 
+movePoppedBubblesUpwards column =
+    let
+        ( popped, unpopped ) =
+            List.partition (\bubble -> bubble.state == Popped) column
+    in
+    popped ++ unpopped
 
--- case msg of
---     ClickedBubble x y ->
---         List.indexedMap
---         (\indexRow row ->
---             if indexRow == x then
---                 (\indexCol bubble ->
---                     if indexCol == y then
---                         {model | matrix = popBubble bubble
---                 )
---                 row
---         )
---         model.matrix
+
+updateBubbles : Matrix Bubble -> Matrix Bubble
+updateBubbles matrix =
+    let
+        columns =
+            transpose matrix
+
+        newColumns =
+            List.map movePoppedBubblesUpwards columns
+    in
+    transpose newColumns
 
 
 initialMatrix : Matrix Bubble
@@ -262,3 +268,34 @@ initModel =
     { matrix = initialMatrix
     , matrixState = Idle
     }
+
+
+
+--- HELPERS
+
+
+transpose : Matrix a -> Matrix a
+transpose matrix =
+    case matrix of
+        [] ->
+            []
+
+        [] :: _ ->
+            []
+
+        _ ->
+            let
+                heads : List a
+                heads =
+                    List.map List.head matrix |> List.filterMap identity
+
+                tails : List (List a)
+                tails =
+                    List.map List.tail matrix |> List.filterMap identity
+            in
+            heads :: transpose tails
+
+
+identity : Maybe a -> Maybe a
+identity val =
+    val
