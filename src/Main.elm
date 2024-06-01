@@ -6,6 +6,7 @@ import Element.Background
 import Element.Border
 import Element.Events
 import Html exposing (b)
+import Random
 import Set
 
 
@@ -15,6 +16,7 @@ type Color
     | Blue
     | Yellow
     | Black
+    | NoColor --white
 
 
 
@@ -47,19 +49,34 @@ type alias Matrix valType =
 type alias Model =
     { matrix : Matrix Bubble
     , matrixState : MatrixState
+    , rows : Int
+    , columns : Int
     }
 
 
 type Msg
     = ClickedBubble Int Int
+    | GeneratedRandomMatrix (Matrix Bubble)
 
 
+main : Program () Model Msg
 main =
-    Browser.sandbox
-        { init = initModel
+    Browser.element
+        { init = \_ -> ( initModel, randomMatrix initModel.rows initModel.columns |> Random.generate GeneratedRandomMatrix )
         , update = update
         , view = view
+        , subscriptions = \_ -> Sub.none
         }
+
+
+randomMatrix r c =
+    Random.map (\color -> { state = Unpopped, color = color }) randomColor
+        |> Random.list c
+        |> Random.list r
+
+
+randomColor =
+    Random.uniform Red [ Green, Blue, Yellow, Black ]
 
 
 view model =
@@ -67,22 +84,21 @@ view model =
 
 
 bubbleGrid matrix =
+    let
+        viewBubble x y bubble =
+            Element.el
+                [ Element.Background.color (getRgbColor bubble |> (\( r, g, b ) -> Element.rgb255 r g b))
+                , Element.width (Element.px bubbleDiameter)
+                , Element.height (Element.px bubbleDiameter)
+                , Element.Border.rounded 20
+                , Element.Events.onClick (ClickedBubble x y)
+                ]
+                Element.none
+
+        bubbleGridRow x row =
+            Element.row [ Element.spacing 3 ] (List.indexedMap (viewBubble x) row)
+    in
     Element.column [ Element.spacing 3 ] (List.indexedMap bubbleGridRow matrix)
-
-
-bubbleGridRow x row =
-    Element.row [ Element.spacing 3 ] (List.indexedMap (viewBubble x) row)
-
-
-viewBubble x y bubble =
-    Element.el
-        [ Element.Background.color (getRgbColor bubble |> (\( r, g, b ) -> Element.rgb255 r g b))
-        , Element.width (Element.px bubbleDiameter)
-        , Element.height (Element.px bubbleDiameter)
-        , Element.Border.rounded 20
-        , Element.Events.onClick (ClickedBubble x y)
-        ]
-        Element.none
 
 
 bubbleDiameter : Int
@@ -113,8 +129,11 @@ getRgbColor bubble =
                 Black ->
                     ( 0, 0, 0 )
 
+                NoColor ->
+                    ( 255, 255, 255 )
 
-update : Msg -> Model -> Model
+
+update : Msg -> Model -> ( Model, Cmd msg )
 update msg model =
     case msg of
         ClickedBubble x y ->
@@ -131,7 +150,10 @@ update msg model =
                         Nothing ->
                             model.matrix
             in
-            { model | matrix = newMatrix }
+            ( { model | matrix = newMatrix }, Cmd.none )
+
+        GeneratedRandomMatrix matrix ->
+            ( { model | matrix = matrix }, Cmd.none )
 
 
 getBubble : Int -> Int -> Matrix Bubble -> Maybe Bubble
@@ -269,6 +291,8 @@ initModel : Model
 initModel =
     { matrix = initialMatrix
     , matrixState = Idle
+    , rows = 10
+    , columns = 10
     }
 
 
