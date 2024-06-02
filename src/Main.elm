@@ -8,6 +8,7 @@ import Element.Events
 import Html
 import Random
 import Set
+import Simple.Transition as Transition
 
 
 type Color
@@ -92,13 +93,18 @@ bubbleGrid matrix =
         viewBubble : Int -> Int -> Bubble -> Element.Element Msg
         viewBubble x y bubble =
             Element.el
-                [ Element.Background.color (getRgbColor bubble |> (\( r, g, b ) -> Element.rgb255 r g b))
-                , Element.width (Element.px bubbleDiameter)
-                , Element.height (Element.px bubbleDiameter)
-                , Element.Border.rounded 20
-                , Element.Events.onClick (ClickedBubble x y)
+                [ Element.Events.onClick (ClickedBubble x y)
+                , Element.mouseOver [ Element.scale 1.2 ]
+                , Transition.properties [ Transition.transform 150 [ Transition.easeInOut ] ] |> Element.htmlAttribute
                 ]
-                Element.none
+                (Element.el
+                    [ Element.width (Element.px bubbleDiameter)
+                    , Element.height (Element.px bubbleDiameter)
+                    , Element.Background.color (getRgbColor bubble |> (\( r, g, b ) -> Element.rgb255 r g b))
+                    , Element.Border.rounded 20
+                    ]
+                    Element.none
+                )
 
         bubbleGridRow : Int -> List Bubble -> Element.Element Msg
         bubbleGridRow x row =
