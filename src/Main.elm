@@ -170,7 +170,8 @@ bubbleGrid matrix =
             Element.el
                 [ Element.Events.onClick (ClickedBubble x y)
                 , Element.mouseOver [ Element.scale 1.2 ]
-                , Transition.properties [ Transition.transform 0 [ Transition.easeInOut ] ] |> Element.htmlAttribute
+                , Element.pointer
+                , Transition.properties [ Transition.transform 100 [ Transition.easeInOut ] ] |> Element.htmlAttribute
                 ]
                 (Element.el
                     [ Element.width (Element.px bubbleDiameter)
