@@ -1,10 +1,12 @@
 module Main exposing (..)
 
 import Browser
+import Debug exposing (toString)
 import Element
 import Element.Background
 import Element.Border
 import Element.Events
+import Element.Input
 import Html
 import Random
 import Set
@@ -17,6 +19,7 @@ type Color
     | Blue
     | Yellow
     | Black
+    | Grey
     | NoColor --white
 
 
@@ -50,31 +53,38 @@ type alias Matrix valType =
 type alias Model =
     { matrix : Matrix Bubble
     , matrixState : MatrixState
-    , rows : Int
-    , columns : Int
+    , rows : Float
+    , columns : Float
     }
 
 
 type Msg
     = ClickedBubble Int Int
     | GeneratedRandomMatrix (Matrix Bubble)
+    | ChangedNumOfRows Float
+    | ChangedNumOfColumns Float
+    | ConfigChanged
 
 
 main : Program () Model Msg
 main =
     Browser.element
-        { init = \_ -> ( initModel, randomMatrix initModel.rows initModel.columns |> Random.generate GeneratedRandomMatrix )
+        { init = \_ -> ( initModel, generateNewMatrix initModel )
         , update = update
         , view = view
         , subscriptions = \_ -> Sub.none
         }
 
 
-randomMatrix : Int -> Int -> Random.Generator (Matrix Bubble)
+generateNewMatrix model =
+    randomMatrix model.rows model.columns |> Random.generate GeneratedRandomMatrix
+
+
+randomMatrix : Float -> Float -> Random.Generator (Matrix Bubble)
 randomMatrix r c =
     Random.map (\color -> { state = Unpopped, color = color }) randomColor
-        |> Random.list c
-        |> Random.list r
+        |> Random.list (floor c)
+        |> Random.list (floor r)
 
 
 randomColor : Random.Generator Color
@@ -84,7 +94,55 @@ randomColor =
 
 view : Model -> Html.Html Msg
 view model =
-    Element.layout [] (bubbleGrid model.matrix)
+    Element.layout [ Element.padding 40 ] (Element.row [ Element.spacingXY 50 0 ] [ bubbleGrid model.matrix, config model ])
+
+
+config : Model -> Element.Element Msg
+config model =
+    Element.column []
+        [ slider "Rows" model.rows ChangedNumOfRows
+        , slider "Columns" model.columns ChangedNumOfColumns
+        , generateNewMatrixButton
+        ]
+
+
+generateNewMatrixButton =
+    Element.Input.button []
+        { onPress = Just ConfigChanged
+        , label = Element.text "Generate New Matrix"
+        }
+
+
+slider : String -> Float -> (Float -> msg) -> Element.Element msg
+slider label value msg =
+    Element.el [] <|
+        Element.Input.slider
+            [ Element.height (Element.px 30)
+            , Element.width (Element.px 300)
+
+            -- Here is where we're creating/styling the "track"
+            , Element.behindContent
+                (Element.el
+                    [ Element.width Element.fill
+                    , Element.height (Element.px 2)
+                    , Element.centerY
+                    , Element.Background.color <| (\( r, g, b ) -> Element.rgb255 r g b) <| getRgbColor Grey
+                    , Element.Border.rounded 2
+                    ]
+                    Element.none
+                )
+            ]
+            { onChange = msg
+            , label =
+                Element.Input.labelAbove []
+                    (Element.text (label ++ " " ++ toString value))
+            , min = 0
+            , max = 25
+            , step = Just 1
+            , value = value
+            , thumb =
+                Element.Input.defaultThumb
+            }
 
 
 bubbleGrid : Matrix Bubble -> Element.Element Msg
@@ -95,12 +153,12 @@ bubbleGrid matrix =
             Element.el
                 [ Element.Events.onClick (ClickedBubble x y)
                 , Element.mouseOver [ Element.scale 1.2 ]
-                , Transition.properties [ Transition.transform 150 [ Transition.easeInOut ] ] |> Element.htmlAttribute
+                , Transition.properties [ Transition.transform 0 [ Transition.easeInOut ] ] |> Element.htmlAttribute
                 ]
                 (Element.el
                     [ Element.width (Element.px bubbleDiameter)
                     , Element.height (Element.px bubbleDiameter)
-                    , Element.Background.color (getRgbColor bubble |> (\( r, g, b ) -> Element.rgb255 r g b))
+                    , Element.Background.color (getRgbColor bubble.color |> (\( r, g, b ) -> Element.rgb255 r g b))
                     , Element.Border.rounded 20
                     ]
                     Element.none
@@ -118,34 +176,32 @@ bubbleDiameter =
     30
 
 
-getRgbColor : Bubble -> ( Int, Int, Int )
-getRgbColor bubble =
-    case bubble.state of
-        Popped ->
+getRgbColor : Color -> ( Int, Int, Int )
+getRgbColor color =
+    case color of
+        Red ->
+            ( 255, 0, 0 )
+
+        Blue ->
+            ( 0, 0, 255 )
+
+        Green ->
+            ( 0, 255, 0 )
+
+        Yellow ->
+            ( 0, 125, 125 )
+
+        Black ->
+            ( 0, 0, 0 )
+
+        Grey ->
+            ( 150, 150, 150 )
+
+        NoColor ->
             ( 255, 255, 255 )
 
-        Unpopped ->
-            case bubble.color of
-                Red ->
-                    ( 255, 0, 0 )
 
-                Blue ->
-                    ( 0, 0, 255 )
-
-                Green ->
-                    ( 0, 255, 0 )
-
-                Yellow ->
-                    ( 0, 125, 125 )
-
-                Black ->
-                    ( 0, 0, 0 )
-
-                NoColor ->
-                    ( 255, 255, 255 )
-
-
-update : Msg -> Model -> ( Model, Cmd msg )
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ClickedBubble x y ->
@@ -167,6 +223,15 @@ update msg model =
 
         GeneratedRandomMatrix matrix ->
             ( { model | matrix = matrix }, Cmd.none )
+
+        ChangedNumOfRows newRows ->
+            ( { model | rows = newRows }, Cmd.none )
+
+        ChangedNumOfColumns newColumns ->
+            ( { model | columns = newColumns }, Cmd.none )
+
+        ConfigChanged ->
+            ( model, generateNewMatrix model )
 
 
 getBubble : Int -> Int -> Matrix Bubble -> Maybe Bubble
@@ -265,7 +330,7 @@ changeBubbleState r c matrix =
                 List.indexedMap
                     (\ic bubble ->
                         if ic == c then
-                            { bubble | state = Popped }
+                            { bubble | state = Popped, color = NoColor }
 
                         else
                             bubble
