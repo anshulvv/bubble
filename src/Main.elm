@@ -6,6 +6,7 @@ import Element
 import Element.Background
 import Element.Border
 import Element.Events
+import Element.Font
 import Element.Input
 import Html
 import Random
@@ -95,7 +96,21 @@ randomColor =
 
 view : Model -> Html.Html Msg
 view model =
-    Element.layout [ Element.padding 40 ] (Element.row [ Element.spacingXY 50 0 ] [ bubbleGrid model.matrix, config model ])
+    let
+        heading =
+            Element.column []
+                [ Element.el
+                    [ Element.Font.size 30
+                    , Element.Font.bold
+                    ]
+                    (Element.text "Bubble")
+                , Element.el [] (Element.text "Click on a bubble to pop it and some bubbles close by of same color")
+                ]
+
+        content =
+            Element.row [ Element.spacingXY 50 0 ] [ bubbleGrid model.matrix, config model ]
+    in
+    Element.layout [ Element.padding 40 ] (Element.column [ Element.spacingXY 0 50 ] [ heading, content ])
 
 
 config : Model -> Element.Element Msg
@@ -368,19 +383,9 @@ updateBubbles matrix =
     transpose newColumns
 
 
-initialMatrix : Matrix Bubble
-initialMatrix =
-    [ [ { state = Unpopped, color = Green }, { state = Unpopped, color = Red }, { state = Unpopped, color = Blue }, { state = Unpopped, color = Yellow }, { state = Unpopped, color = Black } ]
-    , [ { state = Unpopped, color = Blue }, { state = Unpopped, color = Yellow }, { state = Unpopped, color = Green }, { state = Unpopped, color = Green }, { state = Unpopped, color = Red } ]
-    , [ { state = Unpopped, color = Yellow }, { state = Unpopped, color = Green }, { state = Unpopped, color = Green }, { state = Unpopped, color = Red }, { state = Unpopped, color = Blue } ]
-    , [ { state = Unpopped, color = Black }, { state = Unpopped, color = Green }, { state = Unpopped, color = Red }, { state = Unpopped, color = Blue }, { state = Unpopped, color = Yellow } ]
-    , [ { state = Unpopped, color = Red }, { state = Unpopped, color = Blue }, { state = Unpopped, color = Yellow }, { state = Unpopped, color = Black }, { state = Unpopped, color = Green } ]
-    ]
-
-
 initModel : Model
 initModel =
-    { matrix = initialMatrix
+    { matrix = [ [] ]
     , matrixState = Idle
     , rows = 10
     , columns = 10
