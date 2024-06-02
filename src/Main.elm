@@ -76,6 +76,7 @@ main =
         }
 
 
+generateNewMatrix : Model -> Cmd Msg
 generateNewMatrix model =
     randomMatrix model.rows model.columns |> Random.generate GeneratedRandomMatrix
 
@@ -106,6 +107,7 @@ config model =
         ]
 
 
+generateNewMatrixButton : Element.Element Msg
 generateNewMatrixButton =
     Element.Input.button []
         { onPress = Just ConfigChanged
