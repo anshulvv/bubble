@@ -311,14 +311,10 @@ bfsHelper queue visited matrix color =
 
 isValidBubble : Int -> Int -> Matrix Bubble -> Bool
 isValidBubble r c matrix =
-    r
-        >= 0
-        && r
-        < List.length matrix
-        && c
-        >= 0
-        && c
-        < (List.length <| Maybe.withDefault [] <| List.head matrix)
+    (r >= 0)
+        && (r < List.length matrix)
+        && (c >= 0)
+        && (c < (List.length <| Maybe.withDefault [] <| List.head matrix))
 
 
 isSameColor : Int -> Int -> Matrix Bubble -> Color -> Bool
