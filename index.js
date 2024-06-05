@@ -5538,61 +5538,6 @@ var $elm$core$List$filter = F2(
 			_List_Nil,
 			list);
 	});
-var $elm$core$Maybe$andThen = F2(
-	function (callback, maybeValue) {
-		if (maybeValue.$ === 'Just') {
-			var value = maybeValue.a;
-			return callback(value);
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
-var $elm$core$Basics$composeR = F3(
-	function (f, g, x) {
-		return g(
-			f(x));
-	});
-var $elm$core$List$drop = F2(
-	function (n, list) {
-		drop:
-		while (true) {
-			if (n <= 0) {
-				return list;
-			} else {
-				if (!list.b) {
-					return list;
-				} else {
-					var x = list.a;
-					var xs = list.b;
-					var $temp$n = n - 1,
-						$temp$list = xs;
-					n = $temp$n;
-					list = $temp$list;
-					continue drop;
-				}
-			}
-		}
-	});
-var $elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(x);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $author$project$Main$getBubble = F3(
-	function (x, y, matrix) {
-		return A2(
-			$elm$core$Maybe$andThen,
-			A2(
-				$elm$core$Basics$composeR,
-				$elm$core$List$drop(y),
-				$elm$core$List$head),
-			$elm$core$List$head(
-				A2($elm$core$List$drop, x, matrix)));
-	});
 var $elm$core$Set$Set_elm_builtin = function (a) {
 	return {$: 'Set_elm_builtin', a: a};
 };
@@ -5712,15 +5657,75 @@ var $elm$core$Set$insert = F2(
 		return $elm$core$Set$Set_elm_builtin(
 			A3($elm$core$Dict$insert, key, _Utils_Tuple0, dict));
 	});
+var $author$project$Main$Bubble = F2(
+	function (state, color) {
+		return {color: color, state: state};
+	});
+var $elm$core$Maybe$andThen = F2(
+	function (callback, maybeValue) {
+		if (maybeValue.$ === 'Just') {
+			var value = maybeValue.a;
+			return callback(value);
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
+	});
+var $elm$core$List$drop = F2(
+	function (n, list) {
+		drop:
+		while (true) {
+			if (n <= 0) {
+				return list;
+			} else {
+				if (!list.b) {
+					return list;
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					var $temp$n = n - 1,
+						$temp$list = xs;
+					n = $temp$n;
+					list = $temp$list;
+					continue drop;
+				}
+			}
+		}
+	});
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $author$project$Main$getBubble = F3(
+	function (x, y, matrix) {
+		var bubble = A2(
+			$elm$core$Maybe$andThen,
+			A2(
+				$elm$core$Basics$composeR,
+				$elm$core$List$drop(y),
+				$elm$core$List$head),
+			$elm$core$List$head(
+				A2($elm$core$List$drop, x, matrix)));
+		if (bubble.$ === 'Just') {
+			var bub = bubble.a;
+			return bub;
+		} else {
+			return A2($author$project$Main$Bubble, $author$project$Main$Unpopped, $author$project$Main$NoColor);
+		}
+	});
 var $author$project$Main$isSameColor = F4(
 	function (r, c, matrix, color) {
-		var _v0 = A3($author$project$Main$getBubble, r, c, matrix);
-		if (_v0.$ === 'Just') {
-			var bub = _v0.a;
-			return _Utils_eq(bub.color, color) && _Utils_eq(bub.state, $author$project$Main$Unpopped);
-		} else {
-			return false;
-		}
+		var bub = A3($author$project$Main$getBubble, r, c, matrix);
+		return _Utils_eq(bub.color, color) && _Utils_eq(bub.state, $author$project$Main$Unpopped);
 	});
 var $elm$core$Basics$ge = _Utils_ge;
 var $elm$core$Maybe$withDefault = F2(
@@ -5832,20 +5837,13 @@ var $author$project$Main$bfsHelper = F4(
 						rest,
 						A2(
 							$elm$core$List$filter,
-							function (_v3) {
-								var r = _v3.a;
-								var c = _v3.b;
+							function (_v2) {
+								var r = _v2.a;
+								var c = _v2.b;
 								return A3($author$project$Main$isValidBubble, r, c, matrix) && A4($author$project$Main$isSameColor, r, c, matrix, color);
 							},
 							A2($author$project$Main$neighbors, row, col)));
-					var bubble = A3($author$project$Main$getBubble, row, col, matrix);
-					var newMatrix = function () {
-						if (bubble.$ === 'Just') {
-							return A3($author$project$Main$changeBubbleState, row, col, matrix);
-						} else {
-							return matrix;
-						}
-					}();
+					var newMatrix = A3($author$project$Main$changeBubbleState, row, col, matrix);
 					var $temp$queue = newQueue,
 						$temp$visited = updatedVisited,
 						$temp$matrix = newMatrix,
@@ -5965,15 +5963,8 @@ var $author$project$Main$update = F2(
 				var x = msg.a;
 				var y = msg.b;
 				var targetBubble = A3($author$project$Main$getBubble, x, y, model.matrix);
-				var newMatrix = function () {
-					if (targetBubble.$ === 'Just') {
-						var bubble = targetBubble.a;
-						return $author$project$Main$updateBubbles(
-							A4($author$project$Main$bfsBubble, x, y, model.matrix, bubble.color));
-					} else {
-						return model.matrix;
-					}
-				}();
+				var newMatrix = $author$project$Main$updateBubbles(
+					A4($author$project$Main$bfsBubble, x, y, model.matrix, targetBubble.color));
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,

@@ -224,18 +224,13 @@ update msg model =
     case msg of
         ClickedBubble x y ->
             let
-                targetBubble : Maybe Bubble
+                targetBubble : Bubble
                 targetBubble =
                     getBubble x y model.matrix
 
                 newMatrix : Matrix Bubble
                 newMatrix =
-                    case targetBubble of
-                        Just bubble ->
-                            bfsBubble x y model.matrix bubble.color |> updateBubbles
-
-                        Nothing ->
-                            model.matrix
+                    bfsBubble x y model.matrix targetBubble.color |> updateBubbles
             in
             ( { model | matrix = newMatrix }, Cmd.none )
 
@@ -252,11 +247,20 @@ update msg model =
             ( model, generateNewMatrix model )
 
 
-getBubble : Int -> Int -> Matrix Bubble -> Maybe Bubble
+getBubble : Int -> Int -> Matrix Bubble -> Bubble
 getBubble x y matrix =
-    List.drop x matrix
-        |> List.head
-        |> Maybe.andThen (List.drop y >> List.head)
+    let
+        bubble =
+            List.drop x matrix
+                |> List.head
+                |> Maybe.andThen (List.drop y >> List.head)
+    in
+    case bubble of
+        Just bub ->
+            bub
+
+        Nothing ->
+            Bubble Unpopped NoColor
 
 
 bfsBubble : Int -> Int -> Matrix Bubble -> Color -> Matrix Bubble
@@ -285,10 +289,6 @@ bfsHelper queue visited matrix color =
 
             else
                 let
-                    bubble : Maybe Bubble
-                    bubble =
-                        getBubble row col matrix
-
                     updatedVisited : Set.Set ( Int, Int )
                     updatedVisited =
                         Set.insert ( row, col ) visited
@@ -299,12 +299,7 @@ bfsHelper queue visited matrix color =
 
                     newMatrix : Matrix Bubble
                     newMatrix =
-                        case bubble of
-                            Just _ ->
-                                changeBubbleState row col matrix
-
-                            Nothing ->
-                                matrix
+                        changeBubbleState row col matrix
                 in
                 bfsHelper newQueue updatedVisited newMatrix color
 
@@ -319,12 +314,12 @@ isValidBubble r c matrix =
 
 isSameColor : Int -> Int -> Matrix Bubble -> Color -> Bool
 isSameColor r c matrix color =
-    case getBubble r c matrix of
-        Just bub ->
-            bub.color == color && bub.state == Unpopped
-
-        Nothing ->
-            False
+    let
+        bub : Bubble
+        bub =
+            getBubble r c matrix
+    in
+    bub.color == color && bub.state == Unpopped
 
 
 neighbors : Int -> Int -> List ( Int, Int )
