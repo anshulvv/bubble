@@ -2,7 +2,10 @@
 
 ## TODOs
 
-- No TODOs :)
+- Show tags coming from random quote api in front-end
+- MAKE A SEARCH INPUT FOR KEYWORDS
+  - Make an input
+  - Make a search button to search random quote
 
 ## DONE
 
