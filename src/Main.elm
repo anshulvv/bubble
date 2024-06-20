@@ -9,7 +9,9 @@ import Element.Events
 import Element.Font
 import Element.Input
 import Html
+import Http
 import Random
+import RandomQuoteGenerator
 import Set
 import Simple.Transition as Transition
 
@@ -56,6 +58,7 @@ type alias Model =
     , matrixState : MatrixState
     , rows : Float
     , columns : Float
+    , quote : RandomQuoteGenerator.Quote
     }
 
 
@@ -65,16 +68,25 @@ type Msg
     | ChangedNumOfRows Float
     | ChangedNumOfColumns Float
     | ConfigChanged
+    | QuoteRecieved (Result Http.Error RandomQuoteGenerator.Quote)
 
 
 main : Program () Model Msg
 main =
     Browser.element
-        { init = \_ -> ( initModel, generateNewMatrix initModel )
+        { init = \_ -> ( initModel, initCmd )
         , update = update
         , view = view
         , subscriptions = \_ -> Sub.none
         }
+
+
+initCmd : Cmd Msg
+initCmd =
+    Cmd.batch
+        [ generateNewMatrix initModel
+        , RandomQuoteGenerator.getRandomQuote QuoteRecieved
+        ]
 
 
 generateNewMatrix : Model -> Cmd Msg
@@ -246,6 +258,14 @@ update msg model =
         ConfigChanged ->
             ( model, generateNewMatrix model )
 
+        QuoteRecieved result ->
+            case result of
+                Ok quote ->
+                    ( { model | quote = quote }, Cmd.none )
+
+                Err _ ->
+                    ( { model | quote = RandomQuoteGenerator.emptyQuote }, Cmd.none )
+
 
 getBubble : Int -> Int -> Matrix Bubble -> Bubble
 getBubble x y matrix =
@@ -381,6 +401,7 @@ initModel =
     , matrixState = Idle
     , rows = 10
     , columns = 10
+    , quote = RandomQuoteGenerator.emptyQuote
     }
 
 
