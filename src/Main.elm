@@ -11,7 +11,7 @@ import Element.Input
 import Html
 import Http
 import Random
-import RandomQuoteGenerator
+import RandomQuoteGenerator exposing (Quote)
 import Set
 import Simple.Transition as Transition
 
@@ -58,7 +58,7 @@ type alias Model =
     , matrixState : MatrixState
     , rows : Float
     , columns : Float
-    , quote : RandomQuoteGenerator.Quote
+    , quote : Maybe Quote
     }
 
 
@@ -68,7 +68,7 @@ type Msg
     | ChangedNumOfRows Float
     | ChangedNumOfColumns Float
     | ConfigChanged
-    | QuoteRecieved (Result Http.Error RandomQuoteGenerator.Quote)
+    | QuoteRecieved (Result Http.Error (List Quote))
 
 
 main : Program () Model Msg
@@ -120,9 +120,56 @@ view model =
                 ]
 
         content =
-            Element.row [ Element.spacingXY 50 0 ] [ bubbleGrid model.matrix, config model ]
+            Element.column
+                [ Element.spacingXY 0 70 ]
+                [ Element.row
+                    [ Element.spacingXY 50 0 ]
+                    [ bubbleGrid model.matrix, config model ]
+                ]
     in
-    Element.layout [ Element.padding 40 ] (Element.column [ Element.spacingXY 0 50 ] [ heading, content ])
+    Element.layout [ Element.padding 40 ] (Element.column [ Element.spacingXY 0 50 ] [ heading, content, viewQuote model.quote ])
+
+
+viewQuote : Maybe Quote -> Element.Element Msg
+viewQuote quote =
+    let
+        quoteHeading =
+            Element.el
+                [ Element.Font.size 30
+                , Element.Font.bold
+                ]
+                (Element.text "Random Quote")
+
+        quoteContent : Quote -> Element.Element msg
+        quoteContent quote_ =
+            Element.column
+                [ Element.spacingXY 0 10
+                ]
+                [ Element.paragraph
+                    [ Element.Font.size 20
+                    , Element.Font.italic
+                    ]
+                    [ Element.text ("\"" ++ quote_.quote ++ "\"") ]
+                , Element.el
+                    [ Element.Font.size 15
+                    ]
+                    (Element.text ("~ " ++ quote_.author))
+                , additionalMsg quote_.msg
+                ]
+
+        additionalMsg msg =
+            Element.el []
+                (Element.text msg)
+    in
+    case quote of
+        Just quote_ ->
+            Element.column [ Element.spacingXY 0 20 ]
+                [ quoteHeading
+                , quoteContent quote_
+                ]
+
+        Nothing ->
+            Element.none
 
 
 config : Model -> Element.Element Msg
@@ -260,11 +307,11 @@ update msg model =
 
         QuoteRecieved result ->
             case result of
-                Ok quote ->
-                    ( { model | quote = quote }, Cmd.none )
+                Ok quotesList ->
+                    ( { model | quote = List.head quotesList }, Cmd.none )
 
                 Err _ ->
-                    ( { model | quote = RandomQuoteGenerator.emptyQuote }, Cmd.none )
+                    ( { model | quote = Just (RandomQuoteGenerator.emptyQuoteWithMsg "Error Fetching data") }, Cmd.none )
 
 
 getBubble : Int -> Int -> Matrix Bubble -> Bubble
@@ -401,7 +448,7 @@ initModel =
     , matrixState = Idle
     , rows = 10
     , columns = 10
-    , quote = RandomQuoteGenerator.emptyQuote
+    , quote = Nothing
     }
 
 

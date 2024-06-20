@@ -5,12 +5,13 @@ import Json.Decode as D exposing (Decoder)
 
 
 type alias Quote =
-    { quote : String
+    { msg : String
+    , quote : String
     , author : String
     }
 
 
-getRandomQuote : (Result Http.Error Quote -> msg) -> Cmd msg
+getRandomQuote : (Result Http.Error (List Quote) -> msg) -> Cmd msg
 getRandomQuote msg =
     Http.get
         { url = "https://api.quotable.io/quotes/random"
@@ -18,11 +19,20 @@ getRandomQuote msg =
         }
 
 
-quoteDecoder : Decoder Quote
+quoteDecoder : Decoder (List Quote)
 quoteDecoder =
-    D.succeed (Quote "quote" "author")
+    D.list
+        (D.map2 (Quote "")
+            (D.field "content" D.string)
+            (D.field "author" D.string)
+        )
 
 
 emptyQuote : Quote
 emptyQuote =
-    Quote "" ""
+    Quote "" "" ""
+
+
+emptyQuoteWithMsg : String -> Quote
+emptyQuoteWithMsg msg =
+    Quote msg "" ""
