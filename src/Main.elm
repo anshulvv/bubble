@@ -4,6 +4,7 @@ import Browser
 import Cmd
 import Model exposing (Model)
 import Msg exposing (Msg)
+import Subscriptions as Sub
 import Update
 import View
 
@@ -14,5 +15,5 @@ main =
         { init = \_ -> ( Model.initModel, Cmd.initCmd )
         , update = Update.update
         , view = View.view
-        , subscriptions = \_ -> Sub.none
+        , subscriptions = Sub.subscriptions
         }
