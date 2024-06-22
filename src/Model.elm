@@ -11,6 +11,7 @@ type alias Model =
     , rows : Float
     , columns : Float
     , quote : Maybe Quote
+    , keyPressed : Maybe String
     }
 
 
@@ -21,4 +22,5 @@ initModel =
     , rows = 10
     , columns = 10
     , quote = Nothing
+    , keyPressed = Nothing
     }

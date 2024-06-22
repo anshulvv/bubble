@@ -44,6 +44,9 @@ update msg model =
                 Err _ ->
                     ( { model | quote = Just (Quote.emptyQuoteWithMsg "Error Fetching data") }, Cmd.none )
 
+        Msg.KeyPressed key ->
+            ( { model | keyPressed = Just key }, Cmd.none )
+
 
 updateBubbles : Matrix Bubble -> Matrix Bubble
 updateBubbles matrix =

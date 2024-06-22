@@ -1,4 +1,4 @@
-module Msg exposing (Msg(..))
+module Msg exposing (..)
 
 import Bubble
 import Http
@@ -13,3 +13,4 @@ type Msg
     | ChangedNumOfColumns Float
     | ConfigChanged
     | QuoteRecieved (Result Http.Error (List Quote))
+    | KeyPressed String

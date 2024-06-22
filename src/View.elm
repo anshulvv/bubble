@@ -37,7 +37,37 @@ view model =
                     [ bubbleGrid model.matrix, config model ]
                 ]
     in
-    Element.layout [ Element.padding 40 ] (Element.column [ Element.spacingXY 0 50 ] [ heading, content, viewQuote model.quote ])
+    Element.layout [ Element.padding 40 ]
+        (Element.column [ Element.spacingXY 0 50 ]
+            [ heading
+            , content
+            , viewQuote model.quote
+            , viewKeyPressed model.keyPressed
+            ]
+        )
+
+
+viewKeyPressed : Maybe String -> Element.Element Msg
+viewKeyPressed keyPressed =
+    let
+        viewHeading =
+            Element.el
+                [ Element.Font.size 30
+                , Element.Font.bold
+                ]
+                (Element.text "Random Quote")
+
+        viewContent =
+            Element.paragraph []
+                [ Element.text "Key Pressed: "
+                , Element.el
+                    [ Element.Font.bold
+                    , Element.Font.italic
+                    ]
+                    (Element.text (keyPressed |> Maybe.withDefault ""))
+                ]
+    in
+    Element.column [] [ viewHeading, viewContent ]
 
 
 bubbleGrid : Matrix Bubble -> Element.Element Msg
