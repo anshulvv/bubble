@@ -55,7 +55,7 @@ viewKeyPressed keyPressed =
                 [ Element.Font.size 30
                 , Element.Font.bold
                 ]
-                (Element.text "Random Quote")
+                (Element.text "Pressed Key: ")
 
         viewContent =
             Element.paragraph []
