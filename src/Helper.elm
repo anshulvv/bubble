@@ -53,7 +53,7 @@ bfsHelper queue visited matrix color =
 
                     newQueue : List ( Int, Int )
                     newQueue =
-                        rest ++ List.filter (\( r, c ) -> isValidBubble r c matrix && isBubbleOfColor r c matrix color) (Matrix.neighbors row col)
+                        rest ++ List.filter (\( r, c ) -> isValidBubble r c matrix && isMatrixBubbleOfColor r c matrix color) (Matrix.neighbors row col)
 
                     newMatrix : Matrix Bubble
                     newMatrix =
@@ -91,8 +91,8 @@ isValidBubble r c matrix =
         && (c < (List.length <| Maybe.withDefault [] <| List.head matrix))
 
 
-isBubbleOfColor : Int -> Int -> Matrix Bubble -> Bubble.Color -> Bool
-isBubbleOfColor r c matrix color =
+isMatrixBubbleOfColor : Int -> Int -> Matrix Bubble -> Bubble.Color -> Bool
+isMatrixBubbleOfColor r c matrix color =
     let
         bub : Bubble
         bub =
