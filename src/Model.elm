@@ -12,6 +12,7 @@ type alias Model =
     , columns : Float
     , quote : Maybe Quote
     , keyPressed : Maybe String
+    , consoleLogMessage : String
     }
 
 
@@ -23,4 +24,5 @@ initModel =
     , columns = 10
     , quote = Nothing
     , keyPressed = Nothing
+    , consoleLogMessage = ""
     }

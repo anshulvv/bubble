@@ -16,35 +16,94 @@ import Quote exposing (Quote)
 import Simple.Transition as Transition
 
 
+sectionAttr : List (Element.Attribute msg)
+sectionAttr =
+    [ Element.spacingXY 0 10 ]
+
+
+buttonAttr : List (Element.Attribute msg)
+buttonAttr =
+    [ Element.padding 15
+    , Element.Background.color <| Element.rgb255 240 240 240
+    , Element.Border.rounded 10
+    ]
+
+
+viewTitle : String -> Element.Element Msg
+viewTitle string =
+    Element.el
+        [ Element.Font.size 30
+        , Element.Font.bold
+        ]
+        (Element.text string)
+
+
+viewTitleWithSubheading : String -> String -> Element.Element msg
+viewTitleWithSubheading title subheading =
+    Element.column sectionAttr
+        [ Element.el
+            [ Element.Font.size 30
+            , Element.Font.bold
+            ]
+            (Element.text title)
+        , Element.el [] (Element.text subheading)
+        ]
+
+
 view : Model -> Html Msg
 view model =
-    let
-        heading =
-            Element.column []
-                [ Element.el
-                    [ Element.Font.size 30
-                    , Element.Font.bold
-                    ]
-                    (Element.text "Bubble")
-                , Element.el [] (Element.text "Click on a bubble to pop it and some bubbles close by of same color")
-                ]
-
-        content =
-            Element.column
-                [ Element.spacingXY 0 70 ]
-                [ Element.row
-                    [ Element.spacingXY 50 0 ]
-                    [ bubbleGrid model.matrix, config model ]
-                ]
-    in
     Element.layout [ Element.padding 40 ]
         (Element.column [ Element.spacingXY 0 50 ]
-            [ heading
-            , content
-            , viewQuote model.quote
+            [ viewBubbleGrid model
             , viewKeyPressed model.keyPressed
+            , viewConsolePrintInput
+            , viewQuote model.quote
             ]
         )
+
+
+viewBubbleGrid : Model -> Element.Element Msg
+viewBubbleGrid model =
+    Element.column sectionAttr
+        [ viewTitleWithSubheading "Bubble" "Click on a bubble to pop it and some bubbles close by of same color"
+        , Element.row
+            [ Element.spacingXY 50 0 ]
+            [ bubbleGrid model.matrix, config model ]
+        ]
+
+
+viewConsolePrintInput : Element.Element Msg
+viewConsolePrintInput =
+    let
+        viewInputLabel =
+            Element.Input.labelLeft []
+                (Element.el [] (Element.text "Console Log Input: "))
+
+        viewPrintConsoleInput =
+            Element.Input.text []
+                { onChange = Msg.ConsoleLogMessageInputChanged
+                , text = ""
+                , placeholder = Nothing
+                , label = viewInputLabel
+                }
+
+        viewButtonLabel =
+            Element.el [] (Element.text "Print")
+
+        viewPrintButton =
+            Element.Input.button buttonAttr
+                { onPress = Just Msg.ConsoleLogButtonClicked
+                , label = viewButtonLabel
+                }
+
+        viewContent =
+            Element.row
+                [ Element.spacing 10
+                , Element.alignBottom
+                ]
+                [ viewPrintConsoleInput, viewPrintButton ]
+    in
+    Element.column sectionAttr [ viewTitle "Console Print", viewContent ]
 
 
 viewKeyPressed : Maybe String -> Element.Element Msg
@@ -67,7 +126,7 @@ viewKeyPressed keyPressed =
                     (Element.text (keyPressed |> Maybe.withDefault ""))
                 ]
     in
-    Element.column [] [ viewHeading, viewContent ]
+    Element.column sectionAttr [ viewHeading, viewContent ]
 
 
 bubbleGrid : Matrix Bubble -> Element.Element Msg
@@ -179,7 +238,7 @@ viewQuote quote =
     in
     case quote of
         Just quote_ ->
-            Element.column [ Element.spacingXY 0 20 ]
+            Element.column sectionAttr
                 [ quoteHeading
                 , quoteContent quote_
                 ]

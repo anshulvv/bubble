@@ -1,6 +1,7 @@
 module Update exposing (..)
 
 import Bubble exposing (Bubble)
+import Cmd
 import Helper
 import Matrix exposing (Matrix)
 import Model exposing (Model)
@@ -46,6 +47,12 @@ update msg model =
 
         Msg.KeyPressed key ->
             ( { model | keyPressed = Just key }, Cmd.none )
+
+        Msg.ConsoleLogMessageInputChanged consoleLogMessage ->
+            ( { model | consoleLogMessage = consoleLogMessage }, Cmd.none )
+
+        Msg.ConsoleLogButtonClicked ->
+            ( model, Cmd.consoleLog model.consoleLogMessage )
 
 
 updateBubbles : Matrix Bubble -> Matrix Bubble

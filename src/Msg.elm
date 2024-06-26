@@ -14,3 +14,5 @@ type Msg
     | ConfigChanged
     | QuoteRecieved (Result Http.Error (List Quote))
     | KeyPressed String
+    | ConsoleLogMessageInputChanged String
+    | ConsoleLogButtonClicked
